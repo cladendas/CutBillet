@@ -31,14 +31,17 @@ int rand(int size) {
 
 //резка детали
 //по случайному индексу ind берётся деталь из details[ind] и располагается на заготовке billet
-std::vector<Detail> cut(std::vector<Detail>& details) {
+std::vector<Detail> cut(std::vector<Detail>& details, const double& billetlength) {
 	std::vector<Detail> billet;
-    while (true) {
+    double tmpTotallength = 0;
+    while (tmpTotallength < billetlength) {
         int ind = rand(details.size());
         if (details[ind].count > 0) {
             Detail detail = details[ind];
+            if ((tmpTotallength += details[ind].length) >= billetlength) break;
             billet.push_back(detail);
             std::cout << "- detail " << details[ind].length << '\t';
+            tmpTotallength += details[ind].length;
         }
     }
 	return billet;
@@ -65,8 +68,9 @@ int getTotalCount(std::vector<Detail>& details) {
 void start() {
 	Detail detail;
 	bool cmd = true;
+    int var = 10;
 //	std::vector<Detail> billets;
-    double billets = 6000.f;
+    double billetLength = 6000.f;
 	std::vector<Detail> details;
 
 //	double sumBil = getTotalLength(billets);
@@ -80,9 +84,7 @@ void start() {
 		std::cout << "Enter cmd (next = 1; exit = 0):\n";
 		std::cin >> cmd;
 
-		if (!cmd) {
-			break;
-		}
+		if (!cmd) break;
 
 		detail = enterData();
 		details.push_back(detail);
@@ -92,9 +94,8 @@ void start() {
     if (true) {
         std::vector<Detail> tmpBil;
         std::cout << "...start cutting...\n";
-        while (totalCountDet > 0) {
-            tmpBil = cut(details);
-
+        for(int i = 0; i < var; i++) {
+            tmpBil = cut(details, billetLength);
         }
     } else {
         std::cout << "Error!\n";
