@@ -32,7 +32,6 @@ bool randDouble() {
 }
 
 int rand(int max) {
-	std::srand(std::time(nullptr));
 	return std::rand() % max;
 }
 
@@ -107,13 +106,8 @@ std::vector<int> newBot(std::vector<int> parF, std::vector<int> parS) {
 std::vector<int> randPutInd(int countInd, int maxInd) {
     std::vector<int> tmp;
     for (int i = 0; i < countInd; i++) {
-        int ss = 0;
-        if (randDouble()) {
-            ss = rand(maxInd);
-        } else {
-            ss = rand(maxInd) - 1;
-        }
-        tmp.push_back(ss);
+        int ind = rand(maxInd);
+        tmp.push_back(ind);
     }
     return tmp;
 }
@@ -140,6 +134,7 @@ void start1() {
     double shortesVal = 0.f;
     //кол-во самых коротких деталей, умещающихся на заготовке
     int shortestCountBil = 0;
+    int shortestCountBilDouble = 0;
 
     //введение данных
 //    while(cmd) {
@@ -170,15 +165,18 @@ void start1() {
     while (lengthBil > (shortesVal * shortestCountBil)) {
         shortestCountBil++;
     }
-
+    shortestCountBilDouble = shortestCountBil;
     cmd = true;
     while (cmd) {
 
         for (int i = 0; i < countBots; i++) {
+            int countInd = rand(shortestCountBil);
             //получение случайного бота
-            randInd = randPutInd(shortestCountBil, details.size());
+            randInd = randPutInd(countInd, details.size());
             bots.push_back(randInd);
         }
+
+        shortestCountBil = shortestCountBilDouble;
 
         for (std::vector<int> bot : bots) {
             for (int i : bot) {
