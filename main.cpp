@@ -129,6 +129,30 @@ std::vector<std::vector<int>> checkBots(std::vector<std::vector<int>> bots, doub
     }
 }
 
+//проверка бота bot
+bool check(Bot bot, std::vector<Detail>& details, double lengthBil) {
+    Bot liveBot;
+    std::cout << "проверка бота\n";
+    for (std::vector<int> billet : bot.billets) {
+        double length = 0.f;
+        for (int ind : billet) {
+            if (details[ind].count <= 0) {
+                std::cout << "- не подходит кол-во\t" << details[ind].count << '\n';
+                return false;
+            } else if (length >= lengthBil) {
+                std::cout << "- не подходит длина\t" << length << '\n';
+                return false;
+            }
+            std::cout << "- эта позиция подошла\n";
+            length += details[ind].length;
+            details[ind].count--;
+        }
+        liveBot.billets.push_back(billet);
+    }
+    std::cout << "- бот прошёл проверку\n";
+    return true;
+}
+
 //разметка случайными индексами
 //countInd - кол-во индексов = кол-во самых коротких деталей, умещающихся на заготовке
 //maxInd - максимальный индекс = кол-во видов деталей
@@ -147,7 +171,8 @@ void start1() {
     //длина заготовки
     double lengthBil = 6000.f;
     //детали
-    std::vector<Detail> details = {{1, 200}, {2, 2000}, {3, 350}};
+    std::vector<Detail> details = {{4, 3000}, {4, 2000}, {4, 600}};
+    std::vector<Detail> detailsDouble;
     int countBil = 4;
     //заготовки
     std::vector<std::vector<int>> billets;
@@ -155,11 +180,12 @@ void start1() {
 
     Bot bot;
     std::vector<Bot> bots;
+    std::vector<Bot> botsNorm;
 
     //случайный бот
     std::vector<int> randInd;
 
-    int countBots = 1;
+    int countBots = 6;
     std::vector<std::vector<int>> botsQ;
 
     //кол-во самых длинных деталей
@@ -185,6 +211,7 @@ void start1() {
 //        details.push_back(detail);
 //    }
 
+    detailsDouble = details;
     longestVal = details[0].length;
     shortesVal = details[0].length;
 
@@ -205,36 +232,54 @@ void start1() {
     }
     shortestCountBilDouble = shortestCountBil;
     cmd = true;
+    int var = 1;
     while (cmd) {
 
-        //создание ботов
-        for (int i = 0; i < countBots; i++) {
-            for (int j = 0; j < countBil; j++) {
-                int countInd = rand(shortestCountBil);
-                //получение случайно размеченной заготовки
-                randInd = randPutInd(countInd, details.size());
-                //добавлени случайно размеченной заготовки в бота
-                bot.billets.push_back(randInd);
+        int botsNormCount = 1;
+        while (botsNormCount > 0) {
+            std::cout << "Попытка № " << var << '\n';
+            //создание ботов
+            for (int i = 0; i < countBots; i++) {
+                for (int j = 0; j < countBil; j++) {
+                    int countInd = rand(shortestCountBil);
+                    //получение случайно размеченной заготовки
+                    randInd = randPutInd(countInd, details.size());
+                    //добавлени случайно размеченной заготовки в бота
+                    bot.billets.push_back(randInd);
+                }
+                bots.push_back(bot);
             }
-            bots.push_back(bot);
+
+            for (Bot bot : bots) {
+                bool checking = check(bot, details, lengthBil);
+                if (checking) {
+                    botsNorm.push_back(bot);
+                    botsNormCount--;
+                }
+            }
+
+            for (Bot bot : botsNorm) {
+                for (std::vector<int> bil : bot.billets) {
+                    for (int i : bil) {
+                        std::cout << details[i].length << '\t';
+                    }
+                    std::cout << '\n';
+                }
+            }
+            bots.clear();
+            details = detailsDouble;
+            var++;
         }
 
-        for (Bot bot : bots) {
-            for (std::vector<int> bil : bot.billets) {
-                for (int i : bil) {
-                    std::cout << details[i].length << '\t';
-                }
-                std::cout << '\n';
-            }
-        }
 
         std::cout << "========================\n";
         std::cout << "Again (1 = yes; 0 = no)?\n";
         std::cin >> cmd;
-        if (!cmd) break;
-        botsQ.clear();
-        bot.billets.clear();
+//        if (!cmd) break;
+//        botsQ.clear();
+//        bot.billets.clear();
         bots.clear();
+        details = detailsDouble;
         std::cout << "========================\n";
     }
 }
