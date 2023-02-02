@@ -23,33 +23,40 @@ Detail enterData() {
 	return detail;
 }
 
-int rand(int size) {
-	std::srand(std::time(nullptr));
+//генератор выдаст значение от 0 до 1
+bool randDouble() {
+    std::srand(std::time(nullptr));
+    bool tmp = (double)(rand()) / RAND_MAX;
+    if (tmp > 0.5) return true;
+    return false;
+}
 
-	return std::rand() % size;
+int rand(int max) {
+	std::srand(std::time(nullptr));
+	return std::rand() % max;
 }
 
 //резка детали
 //по случайному индексу ind берётся деталь из details[ind] и располагается на заготовке billet
-std::vector<Detail> cut(std::vector<Detail>& details, const double& billetLength) {
-	std::vector<Detail> billet;
-    double tmpTotallength = 0;
-    while (tmpTotallength < billetLength) {
-
-        int ind = rand(details.size());
-        std::cout << "Get rand length of detail: " << ind << '\n';
-
-        if (details[ind].count > 0) {
-            Detail detail = details[ind];
-            if ((tmpTotallength += details[ind].length) >= billetLength) break;
-            billet.push_back(detail);
-            std::cout << "- detail " << details[ind].length << '\n';
-            tmpTotallength += details[ind].length;
-            details[ind].count--; //использование детали
-        }
-    }
-	return billet;
-}
+//std::vector<Detail> cut(std::vector<Detail>& details, const double& billetLength) {
+//	std::vector<Detail> billet;
+//    double tmpTotallength = 0;
+//    while (tmpTotallength < billetLength) {
+//
+//        int ind = rand(details.size());
+//        std::cout << "Get rand length of detail: " << ind << '\n';
+//
+//        if (details[ind].count > 0) {
+//            Detail detail = details[ind];
+//            if ((tmpTotallength += details[ind].length) >= billetLength) break;
+//            billet.push_back(detail);
+//            std::cout << "- detail " << details[ind].length << '\n';
+//            tmpTotallength += details[ind].length;
+//            details[ind].count--; //использование детали
+//        }
+//    }
+//	return billet;
+//}
 
 //общая длина деталей
 double getTotalLength(std::vector<Detail>& details) {
@@ -78,58 +85,117 @@ double lenAfterCut(const std::vector<Detail>& billet, double& length) {
     return length - afterCut;
 }
 
-void start() {
-	Detail detail;
-	bool cmd = true;
-    int var = 10;
-    int countBillets = 4;
-//	std::vector<Detail> billets;
-    double billetLength = 6000.f;
-	std::vector<Detail> details;
-    std::vector<Detail> detailsDouble;
+//скрещивание
+std::vector<int> newBot(std::vector<int> parF, std::vector<int> parS) {
+    std::vector<int> newBil;
 
-//	double sumBil = getTotalLength(billets);
-	double sumBil = 6000.f;
-	double sumDet = getTotalLength(details);
+    int genPar = randDouble() ? parF.size() : parS.size();
 
-	int totalCountDet = getTotalCount(details);
-    //заготовки, которые размечены для резки
-    std::vector<std::vector<Detail>> bilForCut;
-
-	//введение данных
-	while(cmd) {
-		std::cout << "Enter cmd (next = 1; exit = 0):\n";
-		std::cin >> cmd;
-
-		if (!cmd) break;
-
-		detail = enterData();
-		details.push_back(detail);
-	}
-
-    //сохранение изначально введённых данных деталей
-    detailsDouble = details;
-    std::cout << "...start cutting...\n";
-    //создание var вариантов различных разметов
-    for(int i = 0; i < var; i++) {
-        std::cout << "Variant: " << i << '\n';
-        //размечивание каждой заготовки
-        for(int j = 0; j < countBillets; j++) {
-            bilForCut.push_back(cut(details, billetLength));
+    for (int i = 0; i < genPar; i++) {
+        if (randDouble()) {
+            newBil.push_back(parF[i]);
+        } else {
+            newBil.push_back(parS[i]);
         }
-        details = detailsDouble;
+    }
+    return newBil;
+}
+
+//разметка случайными индексами
+//countInd - кол-во индексов = кол-во самых коротких деталей, умещающихся на заготовке
+//maxInd - максимальный индекс = кол-во видов деталей
+std::vector<int> randPutInd(int countInd, int maxInd) {
+    std::vector<int> tmp;
+    for (int i = 0; i < countInd; i++) {
+        int ss = 0;
+        if (randDouble()) {
+            ss = rand(maxInd);
+        } else {
+            ss = rand(maxInd) - 1;
+        }
+        tmp.push_back(ss);
+    }
+    return tmp;
+}
+
+void start1() {
+    Detail detail;
+    bool cmd = true;
+    //длина заготовки
+    double lengthBil = 6000.f;
+    std::vector<Detail> details = {{1, 200}, {2, 2000}, {3, 350}};
+    std::vector<std::vector<Detail>> bilForCut;
+    std::vector<int> randInd;
+
+    int countBots = 10;
+    std::vector<std::vector<int>> bots;
+
+    //кол-во самых длинных деталей
+    int longestCount = 0;
+    //длина самых длинных деталей
+    double longestVal = 0.f;
+    //кол-во самых коротких деталей
+    int shortesCount = 0;
+    //длина самых коротких деталей
+    double shortesVal = 0.f;
+    //кол-во самых коротких деталей, умещающихся на заготовке
+    int shortestCountBil = 0;
+
+    //введение данных
+//    while(cmd) {
+//        std::cout << "Enter cmd (next = 1; exit = 0):\n";
+//        std::cin >> cmd;
+//
+//        if (!cmd) break;
+//
+//        detail = enterData();
+//        details.push_back(detail);
+//    }
+
+    longestVal = details[0].length;
+    shortesVal = details[0].length;
+
+    for (int i = 0; i < details.size(); i++) {
+        if (longestVal < details[i].length) {
+            longestCount = details[i].count;
+            longestVal = details[i].length;
+        }
+        if (shortesVal > details[i].length) {
+            shortesCount = details[i].count;
+            shortesVal = details[i].length;
+        }
     }
 
-    //получившиеся варианты
-    for (std::vector<Detail> bil : bilForCut) {
-        for (Detail det : bil) {
-            std::cout << det.length << '\t';
+    //сколько самых каротких деталей поместится на заготовке
+    while (lengthBil > (shortesVal * shortestCountBil)) {
+        shortestCountBil++;
+    }
+
+    cmd = true;
+    while (cmd) {
+
+        for (int i = 0; i < countBots; i++) {
+            //получение случайного бота
+            randInd = randPutInd(shortestCountBil, details.size());
+            bots.push_back(randInd);
         }
-        std::cout << '\n';
+
+        for (std::vector<int> bot : bots) {
+            for (int i : bot) {
+                std::cout << details[i].length << '\t';
+            }
+            std::cout << '\n';
+        }
+        std::cout << "========================\n";
+        std::cout << "Again (1 = yes; 0 = no)?\n";
+        std::cin >> cmd;
+        if (!cmd) break;
+        bots.clear();
+        std::cout << "========================\n";
     }
 }
 
 int main() {
-    start();
+    start1();
 	return 0;
 }
