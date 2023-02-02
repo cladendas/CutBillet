@@ -100,6 +100,35 @@ std::vector<int> newBot(std::vector<int> parF, std::vector<int> parS) {
     return newBil;
 }
 
+struct Bot {
+    std::vector<std::vector<int>> billets;
+};
+
+struct BestBot {
+    std::vector<int> ind;
+    double length = 0.f;
+};
+
+//расчёт ошибки и выбор лучших
+std::vector<std::vector<int>> checkBots(std::vector<std::vector<int>> bots, double lengthBil, std::vector<Detail> details) {
+    //сколько лучших
+    int countBest = 6;
+    std::vector<std::vector<int>> bestInd;
+    std::vector<BestBot> bestBots;
+    double shortestLenght = 0.f;
+
+    for (std::vector<int> bot : bots) {
+        double totalLength = 0;
+        for (int ind : bot) {
+            totalLength += details[ind].length;
+        }
+
+        if (lengthBil > totalLength) {
+            bestBots.push_back({bot, totalLength});
+        }
+    }
+}
+
 //разметка случайными индексами
 //countInd - кол-во индексов = кол-во самых коротких деталей, умещающихся на заготовке
 //maxInd - максимальный индекс = кол-во видов деталей
@@ -117,12 +146,21 @@ void start1() {
     bool cmd = true;
     //длина заготовки
     double lengthBil = 6000.f;
+    //детали
     std::vector<Detail> details = {{1, 200}, {2, 2000}, {3, 350}};
+    int countBil = 4;
+    //заготовки
+    std::vector<std::vector<int>> billets;
     std::vector<std::vector<Detail>> bilForCut;
+
+    Bot bot;
+    std::vector<Bot> bots;
+
+    //случайный бот
     std::vector<int> randInd;
 
-    int countBots = 10;
-    std::vector<std::vector<int>> bots;
+    int countBots = 1;
+    std::vector<std::vector<int>> botsQ;
 
     //кол-во самых длинных деталей
     int longestCount = 0;
@@ -161,7 +199,7 @@ void start1() {
         }
     }
 
-    //сколько самых каротких деталей поместится на заготовке
+    //сколько самых коротких деталей поместится на заготовке
     while (lengthBil > (shortesVal * shortestCountBil)) {
         shortestCountBil++;
     }
@@ -169,25 +207,33 @@ void start1() {
     cmd = true;
     while (cmd) {
 
+        //создание ботов
         for (int i = 0; i < countBots; i++) {
-            int countInd = rand(shortestCountBil);
-            //получение случайного бота
-            randInd = randPutInd(countInd, details.size());
-            bots.push_back(randInd);
-        }
-
-        shortestCountBil = shortestCountBilDouble;
-
-        for (std::vector<int> bot : bots) {
-            for (int i : bot) {
-                std::cout << details[i].length << '\t';
+            for (int j = 0; j < countBil; j++) {
+                int countInd = rand(shortestCountBil);
+                //получение случайно размеченной заготовки
+                randInd = randPutInd(countInd, details.size());
+                //добавлени случайно размеченной заготовки в бота
+                bot.billets.push_back(randInd);
             }
-            std::cout << '\n';
+            bots.push_back(bot);
         }
+
+        for (Bot bot : bots) {
+            for (std::vector<int> bil : bot.billets) {
+                for (int i : bil) {
+                    std::cout << details[i].length << '\t';
+                }
+                std::cout << '\n';
+            }
+        }
+
         std::cout << "========================\n";
         std::cout << "Again (1 = yes; 0 = no)?\n";
         std::cin >> cmd;
         if (!cmd) break;
+        botsQ.clear();
+        bot.billets.clear();
         bots.clear();
         std::cout << "========================\n";
     }
