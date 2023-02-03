@@ -156,11 +156,23 @@ bool check(Bot bot, std::vector<Detail>& details, double lengthBil) {
 //разметка случайными индексами
 //countInd - кол-во индексов = кол-во самых коротких деталей, умещающихся на заготовке
 //maxInd - максимальный индекс = кол-во видов деталей
-std::vector<int> randPutInd(int countInd, int maxInd) {
+std::vector<int> randPutInd(int countInd, int maxInd, std::vector<Detail>& details, double lengthBil) {
     std::vector<int> tmp;
-    for (int i = 0; i < countInd; i++) {
+    bool build = true;
+    double length = 0.f;
+    while (build) {
         int ind = rand(maxInd);
+
+        if (details[ind].count < 0) {
+            continue;
+        }
+        if ((length + details[ind].length) > lengthBil) {
+            continue;
+        }
+        details[ind].count--;
+        length += details[ind].length;
         tmp.push_back(ind);
+
     }
     return tmp;
 }
@@ -246,6 +258,7 @@ void start1() {
                     randInd = randPutInd(countInd, details.size());
                     //добавлени случайно размеченной заготовки в бота
                     bot.billets.push_back(randInd);
+                    details = detailsDouble;
                 }
                 bots.push_back(bot);
             }
